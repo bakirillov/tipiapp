@@ -5,18 +5,24 @@ import dash
 import datetime
 import numpy as np
 import pandas as pd
+import mysql.connector
 import plotly.tools as tls
 import scipy.stats as stats
-from flask_caching import Cache
-import matplotlib.pyplot as plt
-from sqlitedict import SqliteDict
 import dash_core_components as dcc
 import dash_html_components as html
-from matplotlib.patches import Patch
 from dash.dependencies import Input, Output
 
-db = SqliteDict("responses.sqlite", autocommit=False)
+mydb = mysql.connector.connect(
+  host="",
+  user="",
+  passwd="",
+  database=""
+)
+
+insertion_query = "INSERT INTO responses (session_id, gender, education, age, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, e, a, c, es, o) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"
+
 app = dash.Dash()
+app.title = "TIPI-RU"
 
 def serve_layout():
     session_id = str(uuid.uuid4())
@@ -164,8 +170,6 @@ def plot_picture(v):
     numb = v[2]
     gender = v[3]
     h = np.linspace(1,7)
-    mpl_fig = plt.figure()
-    ax = mpl_fig.add_subplot(111)
     st = population_statistics[name][gender]
     pdf = stats.norm.pdf(h, st[0], st[1])
     graph = dcc.Graph(
@@ -237,14 +241,14 @@ def display_value(n_clicks, session_id, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10,
                 0.5*(answers[8] + uD.index(answers[3])),
                 0.5*(answers[4] + uD.index(answers[9]))
             ], range(5), [gender]*5))
-            store = {}
-            store["answers"] = answers
-            store["items"] = [a[1] for a in values]
-            store["gender"] = gender
-            store["age"] = age
-            store["education"] = education
-            db[session_id] = store
-            db.commit()
+            items = [a[1] for a in values]
+            to_insert = (
+                session_id, gender, education, age,
+                *answers, *items
+            )
+            mycursor = mydb.cursor()
+            mycursor.execute(insertion_query, to_insert)
+            mydb.commit()
             results = [
                     html.Div([
                         html.Div([descriptions[values[0][0]][0]], className="four columns"),
