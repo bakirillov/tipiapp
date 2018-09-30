@@ -29,9 +29,10 @@ def serve_layout():
     return html.Div([
         html.Div(session_id, id='session-id', style={'display': 'none'}),
         html.Center([
-        html.H1("TIPI-RU"),
-        html.Div(id="output"),
-        html.H3("Демографическая информация"),
+            html.H1("TIPI-RU"),
+            dcc.Link("Оригинальная статья TIPI-RU", href='http://psyjournals.ru/en/exp/2016/n3/sergeeva.shtml'),
+            html.Div(id="output"),
+            html.H3("Демографическая информация"),
         ]),
         html.Hr(),
         html.Div([
@@ -39,7 +40,7 @@ def serve_layout():
                 placeholder='Введите возраст...',
                 type='number',
                 size=100, inputmode="numeric",
-                value='', id="age"
+                value=0, id="age"
             )], className="four columns"),
             html.Div(["Ваш пол:", dcc.Slider(
                 min=0,
@@ -59,7 +60,7 @@ def serve_layout():
                     {'label': 'кандидатская степень', 'value': 'phd'},
                     {'label': 'докторская степень', 'value': 'dsc'},
                 ],
-                value='na', id="education"
+                value=0, id="education"
             )], className="four columns")
         ], className="row"),
         html.Div([
@@ -231,7 +232,7 @@ def display_value(n_clicks, session_id, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10,
             "Экстравертность", "Конформизм", "Добросовестность",
             "Эмоциональная стабильность", "Открытость новому опыту"
         ]
-        if 0 in answers:
+        if 0 in answers or 0 in [education, age]:
             results = ["Вы ответили не на все вопросы!"]
         else:
             values = list(zip(names, [
@@ -250,6 +251,7 @@ def display_value(n_clicks, session_id, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10,
             mycursor.execute(insertion_query, to_insert)
             mydb.commit()
             results = [
+                    "Оранжевая черта показывает, где вы находитесь между максимальными и минимальными значениями характеристики",
                     html.Div([
                         html.Div([descriptions[values[0][0]][0]], className="four columns"),
                         html.Div([plot_picture(values[0])], className="four columns"), 
